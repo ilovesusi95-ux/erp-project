@@ -12,3 +12,18 @@ class Product(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Supplier(models.Model):
+    name = models.CharField(max_length=100, verbose_name="供应商名称")
+    contact_person = models.CharField(max_length=50, verbose_name="联系人", blank=True)
+    phone = models.CharField(max_length=20, verbose_name="电话", blank=True)
+    email = models.EmailField(verbose_name="邮箱", blank=True)
+    address = models.TextField(verbose_name="地址", blank=True)
+
+    class Meta:
+        verbose_name = "供应商"
+        verbose_name_plural = "供应商管理"
+
+    def __str__(self):
+        return self.name
