@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Supplier, RegistrationCertificate, Product, Inbound
+from .models import Supplier, RegistrationCertificate, Product, InboundOrder, InboundItem
 
 @admin.register(Supplier)
 class SupplierAdmin(admin.ModelAdmin):
@@ -17,9 +17,20 @@ class ProductAdmin(admin.ModelAdmin):
     search_fields = ('name', 'sku')
     list_filter = ('registration',)
 
-@admin.register(Inbound)
-class InboundAdmin(admin.ModelAdmin):
-    list_display = ('registration', 'product', 'batch_number', 'production_date', 'expiry_date', 'quantity', 'inbound_date')
-    search_fields = ('batch_number', 'registration__name', 'product__name')
-    list_filter = ('registration', 'product', 'expiry_date')
-    readonly_fields = ('production_date', 'expiry_date')  # 自动计算的字段只读
+class InboundItemInline(admin.TabularInline):
+    model = InboundItem
+    extra = 3  # 默认显示3行空白，方便一次添加多个商品
+    fields = ('registration', 'product', 'batch_number', 'production_date', 'expiry_date', 'quantity')
+    readonly_fields = ('production_date', 'expiry_date')
+
+@admin.register(InboundOrder)
+class InboundOrderAdmin(admin.ModelAdmin):
+    list_display = ('order_number', 'inbound_date', 'supplier')
+    inlines = [InboundItemInline]
+    search_fields = ('order_number',)
+
+@admin.register(InboundItem)
+class InboundItemAdmin(admin.ModelAdmin):
+    list_display = ('inbound_order', 'registration', 'product', 'batch_number', 'quantity', 'production_date', 'expiry_date')
+    search_fields = ('batch_number',)
+    list_filter = ('inbound_order', 'registration')
