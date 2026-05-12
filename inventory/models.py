@@ -49,21 +49,34 @@ class Product(models.Model):
         return self.name
 
 
-class Inbound(models.Model):
+class InboundOrder(models.Model):
+    order_number = models.CharField(max_length=50, unique=True, verbose_name="入库单号")
+    inbound_date = models.DateField(auto_now_add=True, verbose_name="入库日期")
+    supplier = models.ForeignKey(Supplier, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="供应商")
+    note = models.TextField(verbose_name="备注", blank=True)
+
+    class Meta:
+        verbose_name = "入库单"
+        verbose_name_plural = "入库单管理"
+
+    def __str__(self):
+        return self.order_number
+
+
+class InboundItem(models.Model):
+    inbound_order = models.ForeignKey(InboundOrder, on_delete=models.CASCADE, verbose_name="入库单", related_name='items')
     registration = models.ForeignKey(RegistrationCertificate, on_delete=models.PROTECT, verbose_name="注册证")
     product = models.ForeignKey(Product, on_delete=models.PROTECT, verbose_name="商品", null=True, blank=True)
     batch_number = models.CharField(max_length=50, verbose_name="生产批号")
     production_date = models.DateField(verbose_name="生产日期", null=True, blank=True)
     expiry_date = models.DateField(verbose_name="到期日期", null=True, blank=True)
     quantity = models.PositiveIntegerField(verbose_name="数量")
-    inbound_date = models.DateTimeField(auto_now_add=True, verbose_name="入库时间")
 
     class Meta:
-        verbose_name = "入库记录"
-        verbose_name_plural = "入库系统"
+        verbose_name = "入库明细"
+        verbose_name_plural = "入库明细"
 
     def save(self, *args, **kwargs):
-        # 自动解析生产日期（批号前8位是YYYYMMDD）
         if not self.production_date and len(self.batch_number) >= 8:
             try:
                 ymd = self.batch_number[:8]
@@ -72,7 +85,6 @@ class Inbound(models.Model):
             except:
                 pass
 
-        # 自动计算到期日期
         if self.production_date and self.registration:
             months = self.registration.shelf_life_months
             total_days = int(months * 30.44)
@@ -81,4 +93,4 @@ class Inbound(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.registration.name} - {self.batch_number} x{self.quantity}"
+        return f"{self.inbound_order.order_number} - {self.batch_number} x{self.quantity}"
