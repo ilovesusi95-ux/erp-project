@@ -19,7 +19,7 @@ class ProductAdmin(admin.ModelAdmin):
 
 class InboundItemInline(admin.TabularInline):
     model = InboundItem
-    extra = 3  # 默认显示3行空白，方便一次添加多个商品
+    extra = 3
     fields = ('registration', 'product', 'batch_number', 'production_date', 'expiry_date', 'quantity')
     readonly_fields = ('production_date', 'expiry_date')
 
@@ -28,9 +28,3 @@ class InboundOrderAdmin(admin.ModelAdmin):
     list_display = ('order_number', 'inbound_date', 'supplier')
     inlines = [InboundItemInline]
     search_fields = ('order_number',)
-
-@admin.register(InboundItem)
-class InboundItemAdmin(admin.ModelAdmin):
-    list_display = ('inbound_order', 'registration', 'product', 'batch_number', 'quantity', 'production_date', 'expiry_date')
-    search_fields = ('batch_number',)
-    list_filter = ('inbound_order', 'registration')
