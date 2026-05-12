@@ -8,5 +8,5 @@ class ProductAdmin(admin.ModelAdmin):
 
 @admin.register(Supplier)
 class SupplierAdmin(admin.ModelAdmin):
-    list_display = ('name', 'contact_person', 'phone', 'email')
-    search_fields = ('name', 'contact_person', 'phone')
+    list_display = ('name', 'address', 'production_license', 'contact_phone')
+    search_fields = ('name', 'production_license', 'contact_phone')
