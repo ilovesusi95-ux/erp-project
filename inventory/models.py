@@ -15,11 +15,10 @@ class Product(models.Model):
 
 
 class Supplier(models.Model):
-    name = models.CharField(max_length=100, verbose_name="供应商名称")
-    contact_person = models.CharField(max_length=50, verbose_name="联系人", blank=True)
-    phone = models.CharField(max_length=20, verbose_name="电话", blank=True)
-    email = models.EmailField(verbose_name="邮箱", blank=True)
+    name = models.CharField(max_length=100, verbose_name="名称")
     address = models.TextField(verbose_name="地址", blank=True)
+    production_license = models.CharField(max_length=100, verbose_name="生产许可证号", blank=True)
+    contact_phone = models.CharField(max_length=20, verbose_name="联系电话", blank=True)
 
     class Meta:
         verbose_name = "供应商"
