@@ -28,6 +28,43 @@ class RegistrationCertificate(models.Model):
         return f"{self.name} ({self.number})"
 
 
+# 新增：规格和型号管理（属于注册证）
+class Specification(models.Model):
+    registration = models.ForeignKey(
+        RegistrationCertificate, 
+        on_delete=models.CASCADE, 
+        related_name='specifications',
+        verbose_name="所属注册证"
+    )
+    name = models.CharField(max_length=100, verbose_name="规格名称")  # 如：I型、II型
+
+    class Meta:
+        verbose_name = "规格"
+        verbose_name_plural = "规格管理"
+        unique_together = [['registration', 'name']]
+
+    def __str__(self):
+        return self.name
+
+
+class SpecModel(models.Model):
+    specification = models.ForeignKey(
+        Specification, 
+        on_delete=models.CASCADE, 
+        related_name='models',
+        verbose_name="所属规格"
+    )
+    name = models.CharField(max_length=100, verbose_name="型号名称")  # 如：1款、2款
+
+    class Meta:
+        verbose_name = "型号"
+        verbose_name_plural = "型号管理"
+        unique_together = [['specification', 'name']]
+
+    def __str__(self):
+        return self.name
+
+
 class Product(models.Model):
     name = models.CharField(max_length=100, verbose_name="商品名称")
     sku = models.CharField(max_length=50, unique=True, verbose_name="商品编码")
