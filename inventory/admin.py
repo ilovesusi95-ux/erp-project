@@ -4,17 +4,48 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
 from openpyxl.utils import get_column_letter
 from datetime import datetime
-from .models import Supplier, RegistrationCertificate, Product, InboundOrder, InboundItem
+from .models import Supplier, RegistrationCertificate, Product, InboundOrder, InboundItem, Specification, SpecModel
 
 @admin.register(Supplier)
 class SupplierAdmin(admin.ModelAdmin):
     list_display = ('name', 'address', 'production_license', 'contact_phone')
     search_fields = ('name', 'production_license', 'contact_phone')
 
+
+# 新增的 Inline 和 Admin
+class SpecModelInline(admin.TabularInline):
+    model = SpecModel
+    extra = 1
+    fields = ('name',)
+
+
+class SpecificationInline(admin.TabularInline):
+    model = Specification
+    extra = 1
+    fields = ('name',)
+
+
 @admin.register(RegistrationCertificate)
 class RegistrationCertificateAdmin(admin.ModelAdmin):
     list_display = ('name', 'number', 'shelf_life_months')
     search_fields = ('name', 'number')
+    inlines = [SpecificationInline]   # 在注册证管理页面可以直接添加规格
+
+
+@admin.register(Specification)
+class SpecificationAdmin(admin.ModelAdmin):
+    list_display = ('name', 'registration')
+    search_fields = ('name',)
+    list_filter = ('registration',)
+    inlines = [SpecModelInline]     # 在规格管理页面可以添加型号
+
+
+@admin.register(SpecModel)
+class SpecModelAdmin(admin.ModelAdmin):
+    list_display = ('name', 'specification')
+    search_fields = ('name',)
+    list_filter = ('specification__registration',)
+
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
@@ -22,11 +53,13 @@ class ProductAdmin(admin.ModelAdmin):
     search_fields = ('name', 'sku')
     list_filter = ('registration',)
 
+
 class InboundItemInline(admin.TabularInline):
     model = InboundItem
     extra = 3
     fields = ('registration', 'product', 'batch_number', 'production_date', 'expiry_date', 'quantity')
     readonly_fields = ('production_date', 'expiry_date')
+
 
 @admin.register(InboundOrder)
 class InboundOrderAdmin(admin.ModelAdmin):
