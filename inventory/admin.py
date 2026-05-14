@@ -159,7 +159,7 @@ class InboundOrderAdmin(admin.ModelAdmin):
     download_excel.short_description = "下载入库单Excel"
 
 
-# ====================== 新增：SKU数据库管理 ======================
+# ====================== SKU数据库管理 (只读模式，不可编辑) ======================
 @admin.register(SkuDatabase)
 class SkuDatabaseAdmin(admin.ModelAdmin):
     list_display = ('specification', 'tube_type', 'drainage_ball', 'drainage_bag', 'puncture_needle', 'full_name', 'sku_code')
@@ -167,34 +167,15 @@ class SkuDatabaseAdmin(admin.ModelAdmin):
     search_fields = ('full_name', 'sku_code')
     ordering = ('specification', 'tube_type')
 
-    actions = ['generate_all_skus']
+    # 锁定为只读模式，用户不能新增、修改、删除
+    def has_add_permission(self, request):
+        return False
 
-    def generate_all_skus(self, request, queryset):
-        specs = ['Fr10', 'Fr12', 'Fr14', 'Fr16', 'Fr18', 'Fr20', 'Fr22', 'Fr24']
-        tubes = ['圆管', '十字管', '双腔管']
-        balls = ['100ml引流球', '200ml引流球']
-        bags = ['无引流袋', '700ml引流袋']
-        needles = ['无穿刺针', '配穿刺针', '配可折弫穿刺针']
+    def has_change_permission(self, request, obj=None):
+        return False
 
-        created_count = 0
-        for spec in specs:
-            for tube in tubes:
-                for ball in balls:
-                    for bag in bags:
-                        for needle in needles:
-                            full_name = (
-                                f"一次性使用术后引流管套件III型{spec}{tube}{ball}{bag}{needle}"
-                            )
-                            if not SkuDatabase.objects.filter(full_name=full_name).exists():
-                                SkuDatabase.objects.create(
-                                    specification=spec,
-                                    tube_type=tube,
-                                    drainage_ball=ball,
-                                    drainage_bag=bag,
-                                    puncture_needle=needle,
-                                )
-                                created_count += 1
+    def has_delete_permission(self, request, obj=None):
+        return False
 
-        self.message_user(request, f"成功生成 {created_count} 条新SKU！总共288条组合已完成。")
-
-    generate_all_skus.short_description = "一键生成所有 288 条 SKU 组合"
+    def has_view_permission(self, request, obj=None):
+        return True
