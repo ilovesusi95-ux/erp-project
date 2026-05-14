@@ -168,3 +168,86 @@ class InboundItem(models.Model):
 
     def __str__(self):
         return f"{self.inbound_order.order_number} - {self.batch_number} x{self.quantity}"
+
+
+# ====================== SKU数据库模块（与注册证管理平行） ======================
+class SkuDatabase(models.Model):
+    PRODUCT_TYPE = "一次性使用术后引流管套件"
+    MODEL_TYPE = "III型"
+
+    SPECIFICATION_CHOICES = [
+        ('Fr10', 'Fr10'),
+        ('Fr12', 'Fr12'),
+        ('Fr14', 'Fr14'),
+        ('Fr16', 'Fr16'),
+        ('Fr18', 'Fr18'),
+        ('Fr20', 'Fr20'),
+        ('Fr22', 'Fr22'),
+        ('Fr24', 'Fr24'),
+    ]
+    TUBE_TYPE_CHOICES = [
+        ('圆管', '圆管'),
+        ('十字管', '十字管'),
+        ('双腔管', '双腔管'),
+    ]
+    DRAINAGE_BALL_CHOICES = [
+        ('100ml引流球', '100ml引流球'),
+        ('200ml引流球', '200ml引流球'),
+    ]
+    DRAINAGE_BAG_CHOICES = [
+        ('无引流袋', '无引流袋'),
+        ('700ml引流袋', '700ml引流袋'),
+    ]
+    PUNCTURE_NEEDLE_CHOICES = [
+        ('无穿刺针', '无穿刺针'),
+        ('配穿刺针', '配穿刺针'),
+        ('配可折弯穿刺针', '配可折弯穿刺针'),
+    ]
+
+    specification = models.CharField(
+        max_length=10, 
+        choices=SPECIFICATION_CHOICES, 
+        verbose_name="规格"
+    )
+    tube_type = models.CharField(
+        max_length=10, 
+        choices=TUBE_TYPE_CHOICES, 
+        verbose_name="管型"
+    )
+    drainage_ball = models.CharField(
+        max_length=20, 
+        choices=DRAINAGE_BALL_CHOICES, 
+        verbose_name="引流球"
+    )
+    drainage_bag = models.CharField(
+        max_length=20, 
+        choices=DRAINAGE_BAG_CHOICES, 
+        verbose_name="引流袋"
+    )
+    puncture_needle = models.CharField(
+        max_length=20, 
+        choices=PUNCTURE_NEEDLE_CHOICES, 
+        verbose_name="穿刺针"
+    )
+
+    class Meta:
+        verbose_name = "SKU数据库"
+        verbose_name_plural = "SKU数据库管理"
+        unique_together = [['specification', 'tube_type', 'drainage_ball', 'drainage_bag', 'puncture_needle']]
+
+    def __str__(self):
+        return self.full_name
+
+    @property
+    def full_name(self):
+        return f"{self.PRODUCT_TYPE}{self.MODEL_TYPE}{self.specification}{self.tube_type}{self.drainage_ball}{self.drainage_bag}{self.puncture_needle}"
+
+    @property
+    def sku_code(self):
+        # 简单生成SKU编码，例如：SKU-Fr12-圆管-100ml-无-无
+        spec = self.specification
+        tube = self.tube_type
+        ball = self.drainage_ball.replace('引流球', '')
+        bag = '无' if self.drainage_bag == '无引流袋' else '700'
+        needle = '无' if self.puncture_needle == '无穿刺针' else ('配' if self.puncture_needle == '配穿刺针' else '可折弯')
+        return f"SKU-{spec}-{tube}-{ball}-{bag}-{needle}"
