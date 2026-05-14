@@ -6,7 +6,7 @@ from openpyxl.utils import get_column_letter
 from datetime import datetime
 from django.urls import reverse
 from django.utils.html import format_html
-from .models import Supplier, RegistrationCertificate, Product, InboundOrder, InboundItem, Specification, SpecModel, SkuDatabase
+from .models import Supplier, RegistrationCertificate, Product, InboundOrder, InboundItem, Specification, SpecModel
 
 @admin.register(Supplier)
 class SupplierAdmin(admin.ModelAdmin):
@@ -157,25 +157,3 @@ class InboundOrderAdmin(admin.ModelAdmin):
         return response
 
     download_excel.short_description = "下载入库单Excel"
-
-
-# ====================== SKU数据库管理 (只读模式，不可编辑) ======================
-@admin.register(SkuDatabase)
-class SkuDatabaseAdmin(admin.ModelAdmin):
-    list_display = ('specification', 'tube_type', 'drainage_ball', 'drainage_bag', 'puncture_needle', 'full_name', 'sku_code')
-    list_filter = ('specification', 'tube_type', 'drainage_ball', 'drainage_bag', 'puncture_needle')
-    search_fields = ('full_name', 'sku_code')
-    ordering = ('specification', 'tube_type')
-
-    # 锁定为只读模式，用户不能新增、修改、删除
-    def has_add_permission(self, request):
-        return False
-
-    def has_change_permission(self, request, obj=None):
-        return False
-
-    def has_delete_permission(self, request, obj=None):
-        return False
-
-    def has_view_permission(self, request, obj=None):
-        return True
