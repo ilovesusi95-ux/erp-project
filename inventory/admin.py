@@ -39,12 +39,18 @@ class SpecificationAdmin(admin.ModelAdmin):
     list_filter = ('registration',)
     inlines = [SpecModelInline]     # 在规格管理页面可以添加型号
 
+    def has_module_permission(self, request):
+        return False   # 隐藏左侧菜单栏，功能集成到注册证管理中
+
 
 @admin.register(SpecModel)
 class SpecModelAdmin(admin.ModelAdmin):
     list_display = ('name', 'specification')
     search_fields = ('name',)
     list_filter = ('specification__registration',)
+
+    def has_module_permission(self, request):
+        return False   # 隐藏左侧菜单栏
 
 
 @admin.register(Product)
