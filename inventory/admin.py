@@ -17,13 +17,13 @@ class SupplierAdmin(admin.ModelAdmin):
 class SpecModelInline(admin.TabularInline):
     model = SpecModel
     extra = 1
-    fields = ('name',)
+    fields = ('name', 'drainage_ball', 'drainage_bag', 'puncture_needle')
 
 
 class SpecificationInline(admin.TabularInline):
     model = Specification
     extra = 1
-    fields = ('name',)   # 简化为只显示规格名称
+    fields = ('name',)
 
 
 @admin.register(RegistrationCertificate)
@@ -32,30 +32,23 @@ class RegistrationCertificateAdmin(admin.ModelAdmin):
     search_fields = ('name', 'number')
     inlines = [SpecificationInline]
 
-    def get_form(self, request, obj=None, **kwargs):
-        form = super().get_form(request, obj, **kwargs)
-        # 可以在注册证管理页面添加提示
-        return form
-
 
 @admin.register(Specification)
 class SpecificationAdmin(admin.ModelAdmin):
     list_display = ('name', 'registration')
     search_fields = ('name',)
-    list_filter = ('registration',)   # 可以按注册证筛选
+    list_filter = ('registration',)
     inlines = [SpecModelInline]
-
-    # 没有 has_module_permission = False，菜单会显示为“产品配置管理”
 
 
 @admin.register(SpecModel)
 class SpecModelAdmin(admin.ModelAdmin):
-    list_display = ('name', 'specification')
+    list_display = ('name', 'specification', 'drainage_ball', 'drainage_bag', 'puncture_needle')
     search_fields = ('name',)
     list_filter = ('specification__registration',)
 
     def has_module_permission(self, request):
-        return False   # 继续隐藏型号菜单
+        return False
 
 
 @admin.register(Product)
