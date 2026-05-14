@@ -6,7 +6,7 @@ from openpyxl.utils import get_column_letter
 from datetime import datetime
 from django.urls import reverse
 from django.utils.html import format_html
-from .models import Supplier, RegistrationCertificate, Product, InboundOrder, InboundItem, Specification, SpecModel
+from .models import Supplier, RegistrationCertificate, Product, InboundOrder, InboundItem, Specification, SpecModel, SkuDatabase
 
 @admin.register(Supplier)
 class SupplierAdmin(admin.ModelAdmin):
@@ -151,9 +151,50 @@ class InboundOrderAdmin(admin.ModelAdmin):
         ws['A16'] = "货物如有差错或质量问题，请于两天内通知本公司。制单人：________  复核人：________  入库人：________"
         ws['A16'].font = Font(size=9)
 
-        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response = HttpResponse(content_type='application/vnd.openxmlformats.openxmlformats-officedocument.spreadsheetml.sheet')
         response['Content-Disposition'] = f'attachment; filename=入库单_{order.order_number}.xlsx'
         wb.save(response)
         return response
 
     download_excel.short_description = "下载入库单Excel"
+
+
+# ====================== 新增：SKU数据库管理 ======================
+@admin.register(SkuDatabase)
+class SkuDatabaseAdmin(admin.ModelAdmin):
+    list_display = ('specification', 'tube_type', 'drainage_ball', 'drainage_bag', 'puncture_needle', 'full_name', 'sku_code')
+    list_filter = ('specification', 'tube_type', 'drainage_ball', 'drainage_bag', 'puncture_needle')
+    search_fields = ('full_name', 'sku_code')
+    ordering = ('specification', 'tube_type')
+
+    actions = ['generate_all_skus']
+
+    def generate_all_skus(self, request, queryset):
+        specs = ['Fr10', 'Fr12', 'Fr14', 'Fr16', 'Fr18', 'Fr20', 'Fr22', 'Fr24']
+        tubes = ['圆管', '十字管', '双腔管']
+        balls = ['100ml引流球', '200ml引流球']
+        bags = ['无引流袋', '700ml引流袋']
+        needles = ['无穿刺针', '配穿刺针', '配可折弫穿刺针']
+
+        created_count = 0
+        for spec in specs:
+            for tube in tubes:
+                for ball in balls:
+                    for bag in bags:
+                        for needle in needles:
+                            full_name = (
+                                f"一次性使用术后引流管套件III型{spec}{tube}{ball}{bag}{needle}"
+                            )
+                            if not SkuDatabase.objects.filter(full_name=full_name).exists():
+                                SkuDatabase.objects.create(
+                                    specification=spec,
+                                    tube_type=tube,
+                                    drainage_ball=ball,
+                                    drainage_bag=bag,
+                                    puncture_needle=needle,
+                                )
+                                created_count += 1
+
+        self.message_user(request, f"成功生成 {created_count} 条新SKU！总共288条组合已完成。")
+
+    generate_all_skus.short_description = "一键生成所有 288 条 SKU 组合"
