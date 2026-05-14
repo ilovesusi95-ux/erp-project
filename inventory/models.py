@@ -28,7 +28,6 @@ class RegistrationCertificate(models.Model):
         return f"{self.name} ({self.number})"
 
 
-# 新增：规格和型号管理（属于注册证）
 class Specification(models.Model):
     registration = models.ForeignKey(
         RegistrationCertificate, 
@@ -36,11 +35,11 @@ class Specification(models.Model):
         related_name='specifications',
         verbose_name="所属注册证"
     )
-    name = models.CharField(max_length=100, verbose_name="规格名称")  # 如：I型、II型
+    name = models.CharField(max_length=100, verbose_name="规格名称")
 
     class Meta:
         verbose_name = "规格"
-        verbose_name_plural = "产品配置管理"   # 菜单显示为产品配置管理
+        verbose_name_plural = "产品配置管理"
         unique_together = [['registration', 'name']]
 
     def __str__(self):
@@ -54,7 +53,45 @@ class SpecModel(models.Model):
         related_name='models',
         verbose_name="所属规格"
     )
-    name = models.CharField(max_length=100, verbose_name="型号名称")  # 如：1款、2款
+    name = models.CharField(max_length=100, verbose_name="型号名称")
+
+    # 新增：针对一次性使用术后引流管套件的配置选项
+    DRAINAGE_BALL_CHOICES = [
+        ('100ml', '100ml'),
+        ('200ml', '200ml'),
+    ]
+    DRAINAGE_BAG_CHOICES = [
+        ('无引流袋', '无引流袋'),
+        ('700ml引流袋', '700ml引流袋'),
+        ('1000ml引流袋', '1000ml引流袋'),
+    ]
+    PUNCTURE_NEEDLE_CHOICES = [
+        ('无穿刺针', '无穿刺针'),
+        ('配穿刺针', '配穿刺针'),
+        ('配可折弫穿刺针', '配可折弫穿刺针'),
+    ]
+
+    drainage_ball = models.CharField(
+        max_length=20, 
+        choices=DRAINAGE_BALL_CHOICES, 
+        blank=True, 
+        null=True, 
+        verbose_name="引流球规格"
+    )
+    drainage_bag = models.CharField(
+        max_length=20, 
+        choices=DRAINAGE_BAG_CHOICES, 
+        blank=True, 
+        null=True, 
+        verbose_name="是否搭配引流袋"
+    )
+    puncture_needle = models.CharField(
+        max_length=20, 
+        choices=PUNCTURE_NEEDLE_CHOICES, 
+        blank=True, 
+        null=True, 
+        verbose_name="是否搭配穿刺针"
+    )
 
     class Meta:
         verbose_name = "型号"
