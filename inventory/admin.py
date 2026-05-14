@@ -14,7 +14,6 @@ class SupplierAdmin(admin.ModelAdmin):
     search_fields = ('name', 'production_license', 'contact_phone')
 
 
-# 新增的 Inline 和 Admin
 class SpecModelInline(admin.TabularInline):
     model = SpecModel
     extra = 1
@@ -24,33 +23,29 @@ class SpecModelInline(admin.TabularInline):
 class SpecificationInline(admin.TabularInline):
     model = Specification
     extra = 1
-    fields = ('name', 'specification_link')
-    readonly_fields = ('specification_link',)
-
-    def specification_link(self, obj):
-        if obj and obj.pk:
-            url = reverse('admin:inventory_specification_change', args=[obj.pk])
-            return format_html('<a href="{}" target="_blank">点击这里添加/管理型号 (如 Fr10, Fr12)</a>', url)
-        return "（保存后出现链接）"
-    specification_link.short_description = "型号管理"
+    fields = ('name',)   # 简化为只显示规格名称
 
 
 @admin.register(RegistrationCertificate)
 class RegistrationCertificateAdmin(admin.ModelAdmin):
     list_display = ('name', 'number', 'shelf_life_months')
     search_fields = ('name', 'number')
-    inlines = [SpecificationInline]   # 在注册证管理页面可以直接添加规格
+    inlines = [SpecificationInline]
+
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        # 可以在注册证管理页面添加提示
+        return form
 
 
 @admin.register(Specification)
 class SpecificationAdmin(admin.ModelAdmin):
     list_display = ('name', 'registration')
     search_fields = ('name',)
-    list_filter = ('registration',)
-    inlines = [SpecModelInline]     # 在规格管理页面可以添加型号
+    list_filter = ('registration',)   # 可以按注册证筛选
+    inlines = [SpecModelInline]
 
-    def has_module_permission(self, request):
-        return False   # 隐藏左侧菜单栏，功能集成到注册证管理中
+    # 没有 has_module_permission = False，菜单会显示为“产品配置管理”
 
 
 @admin.register(SpecModel)
@@ -60,7 +55,7 @@ class SpecModelAdmin(admin.ModelAdmin):
     list_filter = ('specification__registration',)
 
     def has_module_permission(self, request):
-        return False   # 隐藏左侧菜单栏
+        return False   # 继续隐藏型号菜单
 
 
 @admin.register(Product)
