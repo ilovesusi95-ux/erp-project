@@ -4,6 +4,8 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
 from openpyxl.utils import get_column_letter
 from datetime import datetime
+from django.urls import reverse
+from django.utils.html import format_html
 from .models import Supplier, RegistrationCertificate, Product, InboundOrder, InboundItem, Specification, SpecModel
 
 @admin.register(Supplier)
@@ -22,7 +24,15 @@ class SpecModelInline(admin.TabularInline):
 class SpecificationInline(admin.TabularInline):
     model = Specification
     extra = 1
-    fields = ('name',)
+    fields = ('name', 'specification_link')
+    readonly_fields = ('specification_link',)
+
+    def specification_link(self, obj):
+        if obj and obj.pk:
+            url = reverse('admin:inventory_specification_change', args=[obj.pk])
+            return format_html('<a href="{}" target="_blank">点击这里添加/管理型号 (如 Fr10, Fr12)</a>', url)
+        return "（保存后出现链接）"
+    specification_link.short_description = "型号管理"
 
 
 @admin.register(RegistrationCertificate)
