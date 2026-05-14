@@ -55,44 +55,6 @@ class SpecModel(models.Model):
     )
     name = models.CharField(max_length=100, verbose_name="型号名称")
 
-    # 新增：针对一次性使用术后引流管套件的配置选项
-    DRAINAGE_BALL_CHOICES = [
-        ('100ml', '100ml'),
-        ('200ml', '200ml'),
-    ]
-    DRAINAGE_BAG_CHOICES = [
-        ('无引流袋', '无引流袋'),
-        ('700ml引流袋', '700ml引流袋'),
-        ('1000ml引流袋', '1000ml引流袋'),
-    ]
-    PUNCTURE_NEEDLE_CHOICES = [
-        ('无穿刺针', '无穿刺针'),
-        ('配穿刺针', '配穿刺针'),
-        ('配可折弫穿刺针', '配可折弫穿刺针'),
-    ]
-
-    drainage_ball = models.CharField(
-        max_length=20, 
-        choices=DRAINAGE_BALL_CHOICES, 
-        blank=True, 
-        null=True, 
-        verbose_name="引流球规格"
-    )
-    drainage_bag = models.CharField(
-        max_length=20, 
-        choices=DRAINAGE_BAG_CHOICES, 
-        blank=True, 
-        null=True, 
-        verbose_name="是否搭配引流袋"
-    )
-    puncture_needle = models.CharField(
-        max_length=20, 
-        choices=PUNCTURE_NEEDLE_CHOICES, 
-        blank=True, 
-        null=True, 
-        verbose_name="是否搭配穿刺针"
-    )
-
     class Meta:
         verbose_name = "型号"
         verbose_name_plural = "型号管理"
@@ -170,12 +132,17 @@ class InboundItem(models.Model):
         return f"{self.inbound_order.order_number} - {self.batch_number} x{self.quantity}"
 
 
-# ====================== SKU数据库模块（与注册证管理平行） ======================
+# ====================== SKU数据库模块 ======================
 class SkuDatabase(models.Model):
     PRODUCT_TYPE = "一次性使用术后引流管套件"
-    MODEL_TYPE = "III型"
+
+    MODEL_TYPE_CHOICES = [
+        ('III型', 'III型'),
+        ('V型', 'V型'),
+    ]
 
     SPECIFICATION_CHOICES = [
+        ('Fr8', 'Fr8'),
         ('Fr10', 'Fr10'),
         ('Fr12', 'Fr12'),
         ('Fr14', 'Fr14'),
@@ -185,25 +152,37 @@ class SkuDatabase(models.Model):
         ('Fr22', 'Fr22'),
         ('Fr24', 'Fr24'),
     ]
+
     TUBE_TYPE_CHOICES = [
+        ('单腔管', '单腔管'),
+        ('扁管', '扁管'),
         ('圆管', '圆管'),
         ('十字管', '十字管'),
         ('双腔管', '双腔管'),
     ]
+
     DRAINAGE_BALL_CHOICES = [
         ('100ml引流球', '100ml引流球'),
         ('200ml引流球', '200ml引流球'),
     ]
+
     DRAINAGE_BAG_CHOICES = [
         ('无引流袋', '无引流袋'),
         ('700ml引流袋', '700ml引流袋'),
     ]
+
     PUNCTURE_NEEDLE_CHOICES = [
         ('无穿刺针', '无穿刺针'),
         ('配穿刺针', '配穿刺针'),
         ('配可折弯穿刺针', '配可折弯穿刺针'),
     ]
 
+    model_type = models.CharField(
+        max_length=10,
+        choices=MODEL_TYPE_CHOICES,
+        default='III型',
+        verbose_name="型号"
+    )
     specification = models.CharField(
         max_length=10, 
         choices=SPECIFICATION_CHOICES, 
@@ -233,21 +212,26 @@ class SkuDatabase(models.Model):
     class Meta:
         verbose_name = "SKU数据库"
         verbose_name_plural = "SKU数据库管理"
-        unique_together = [['specification', 'tube_type', 'drainage_ball', 'drainage_bag', 'puncture_needle']]
+        unique_together = [['model_type', 'specification', 'tube_type', 'drainage_ball', 'drainage_bag', 'puncture_needle']]
 
     def __str__(self):
         return self.full_name
 
     @property
     def full_name(self):
-        return f"{self.PRODUCT_TYPE}{self.MODEL_TYPE}{self.specification}{self.tube_type}{self.drainage_ball}{self.drainage_bag}{self.puncture_needle}"
+        bag_str = self.drainage_bag if self.drainage_bag != '无引流袋' else ''
+        return f"{self.PRODUCT_TYPE}{self.model_type}{self.specification}{self.tube_type}{self.drainage_ball}{bag_str}{self.puncture_needle}"
 
     @property
     def sku_code(self):
-        # 简单生成SKU编码，例如：SKU-Fr12-圆管-100ml-无-无
         spec = self.specification
         tube = self.tube_type
         ball = self.drainage_ball.replace('引流球', '')
         bag = '无' if self.drainage_bag == '无引流袋' else '700'
-        needle = '无' if self.puncture_needle == '无穿刺针' else ('配' if self.puncture_needle == '配穿刺针' else '可折弯')
+        if self.puncture_needle == '无穿刺针':
+            needle = '无'
+        elif self.puncture_needle == '配穿刺针':
+            needle = '配'
+        else:
+            needle = '可折弯'
         return f"SKU-{spec}-{tube}-{ball}-{bag}-{needle}"
