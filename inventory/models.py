@@ -40,7 +40,7 @@ class Specification(models.Model):
 
     class Meta:
         verbose_name = "规格"
-        verbose_name_plural = "规格管理"
+        verbose_name_plural = "产品配置管理"   # 菜单显示为产品配置管理
         unique_together = [['registration', 'name']]
 
     def __str__(self):
